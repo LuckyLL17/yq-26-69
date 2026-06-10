@@ -28,8 +28,8 @@ export default function BattleLog() {
   const [autoScroll, setAutoScroll] = useState(true);
 
   return (
-    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl p-4 border border-game-magic/30 shadow-lg h-full flex flex-col">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl p-4 border border-game-magic/30 shadow-lg flex flex-col">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <ScrollText className="w-5 h-5 text-purple-400" />
           战斗日志
@@ -47,7 +47,7 @@ export default function BattleLog() {
         </button>
       </div>
 
-      <div className="text-xs text-gray-500 mb-2 flex items-center justify-between">
+      <div className="text-xs text-gray-500 mb-2 flex items-center justify-between flex-shrink-0">
         <span>共 {battleLogs.length} 条记录</span>
         <span className={autoScroll ? 'text-purple-400' : 'text-gray-500'}>
           {autoScroll ? '● 自动滚动' : '○ 手动滚动'}
@@ -55,10 +55,10 @@ export default function BattleLog() {
       </div>
 
       <div
-        className={`flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-0 ${
+        className={`overflow-y-auto space-y-1.5 pr-1 min-h-0 flex-1 ${
           autoScroll ? 'scroll-smooth' : ''
         }`}
-        style={{ maxHeight: '280px' }}
+        style={{ maxHeight: '240px', minHeight: '120px' }}
       >
         {battleLogs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 py-8">

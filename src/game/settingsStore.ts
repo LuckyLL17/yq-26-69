@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { BackgroundTheme } from './renderer';
+import { audioManager } from './audioManager';
 
 export interface GameSettings {
   backgroundTheme: BackgroundTheme;
@@ -41,7 +42,7 @@ const defaultSettings: GameSettings = {
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...defaultSettings,
 
       setBackgroundTheme: (theme) => set({ backgroundTheme: theme }),
@@ -49,11 +50,33 @@ export const useSettingsStore = create<SettingsStore>()(
       setTrailEffect: (enabled) => set({ trailEffect: enabled }),
       setGlowEffect: (enabled) => set({ glowEffect: enabled }),
       setScreenShake: (enabled) => set({ screenShake: enabled }),
-      setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
-      setMusicEnabled: (enabled) => set({ musicEnabled: enabled }),
+      
+      // 音效开关变化时同步到音频管理器
+      setSoundEnabled: (enabled) => {
+        set({ soundEnabled: enabled });
+      },
+      
+      // 音乐开关变化时同步到音频管理器
+      setMusicEnabled: (enabled) => {
+        set({ musicEnabled: enabled });
+        audioManager.toggleMusic(enabled);
+      },
+      
+      // 音效音量变化
       setSoundVolume: (volume) => set({ soundVolume: volume }),
-      setMusicVolume: (volume) => set({ musicVolume: volume }),
-      resetToDefaults: () => set(defaultSettings),
+      
+      // 音乐音量变化时同步到音频管理器
+      setMusicVolume: (volume) => {
+        set({ musicVolume: volume });
+        audioManager.updateMusicVolume(volume);
+      },
+      
+      // 恢复默认设置
+      resetToDefaults: () => {
+        set(defaultSettings);
+        audioManager.toggleMusic(defaultSettings.musicEnabled);
+        audioManager.updateMusicVolume(defaultSettings.musicVolume);
+      },
     }),
     {
       name: 'game-settings',
