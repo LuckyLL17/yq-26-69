@@ -4,6 +4,7 @@ import LevelEditor from "@/components/LevelEditor";
 import { useNavigate } from "react-router-dom";
 import { useGameStore } from "@/game/store";
 import { loadLevelFromStorage } from "@/game/store";
+import { useAudioSync } from "@/hooks/useAudioSync";
 
 function EditorPage() {
   const navigate = useNavigate();
@@ -22,6 +23,9 @@ function EditorPage() {
 }
 
 export default function App() {
+  // 全局同步音频设置到 AudioService
+  useAudioSync();
+
   return (
     <Router>
       <Routes>

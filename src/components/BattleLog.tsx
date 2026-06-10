@@ -58,7 +58,6 @@ export default function BattleLog() {
         className={`flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-0 ${
           autoScroll ? 'scroll-smooth' : ''
         }`}
-        style={{ maxHeight: '280px' }}
       >
         {battleLogs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 py-8">

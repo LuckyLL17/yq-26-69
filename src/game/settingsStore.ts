@@ -24,6 +24,8 @@ interface SettingsStore extends GameSettings {
   setMusicEnabled: (enabled: boolean) => void;
   setSoundVolume: (volume: number) => void;
   setMusicVolume: (volume: number) => void;
+  // 一次性应用整套设置（用于"完成"按钮提交草稿态）
+  applySettings: (settings: GameSettings) => void;
   resetToDefaults: () => void;
 }
 
@@ -53,6 +55,8 @@ export const useSettingsStore = create<SettingsStore>()(
       setMusicEnabled: (enabled) => set({ musicEnabled: enabled }),
       setSoundVolume: (volume) => set({ soundVolume: volume }),
       setMusicVolume: (volume) => set({ musicVolume: volume }),
+      // 用于草稿态一次性提交保存
+      applySettings: (settings) => set({ ...settings }),
       resetToDefaults: () => set(defaultSettings),
     }),
     {
