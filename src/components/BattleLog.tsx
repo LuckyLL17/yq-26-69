@@ -28,7 +28,7 @@ export default function BattleLog() {
   const [autoScroll, setAutoScroll] = useState(true);
 
   return (
-    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl p-4 border border-game-magic/30 shadow-lg flex flex-col flex-1 min-h-0">
+    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl p-4 border border-game-magic/30 shadow-lg flex flex-col min-h-0 max-h-[320px]">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <ScrollText className="w-5 h-5 text-purple-400" />

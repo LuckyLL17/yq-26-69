@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Settings, X, Palette, Sparkles, Volume2, Music, RotateCcw } from 'lucide-react';
 import { useSettingsStore } from '@/game/settingsStore';
 import type { BackgroundTheme } from '@/game/renderer';
+import type { GameSettings } from '@/game/settingsStore';
 
 const themeOptions: { value: BackgroundTheme; label: string; icon: string; colors: string[] }[] = [
   { value: 'night', label: '暗夜星空', icon: '🌙', colors: ['#1a1a2e', '#7c3aed', '#a78bfa'] },
@@ -13,34 +14,92 @@ const themeOptions: { value: BackgroundTheme; label: string; icon: string; color
   { value: 'ocean', label: '深海秘境', icon: '🌊', colors: ['#0f2a3a', '#0ea5e9', '#7dd3fc'] },
 ];
 
+const defaultSettings: GameSettings = {
+  backgroundTheme: 'night',
+  particleIntensity: 1,
+  trailEffect: true,
+  glowEffect: true,
+  screenShake: true,
+  soundEnabled: true,
+  musicEnabled: true,
+  soundVolume: 0.7,
+  musicVolume: 0.5,
+};
+
 export default function SettingsPanel() {
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    backgroundTheme,
-    particleIntensity,
-    trailEffect,
-    glowEffect,
-    screenShake,
-    soundEnabled,
-    musicEnabled,
-    soundVolume,
-    musicVolume,
-    setBackgroundTheme,
-    setParticleIntensity,
-    setTrailEffect,
-    setGlowEffect,
-    setScreenShake,
-    setSoundEnabled,
-    setMusicEnabled,
-    setSoundVolume,
-    setMusicVolume,
-    resetToDefaults,
-  } = useSettingsStore();
+  const [draft, setDraft] = useState<GameSettings | null>(null);
+
+  const storeSettings = useSettingsStore();
+
+  useEffect(() => {
+    if (isOpen && !draft) {
+      setDraft({
+        backgroundTheme: storeSettings.backgroundTheme,
+        particleIntensity: storeSettings.particleIntensity,
+        trailEffect: storeSettings.trailEffect,
+        glowEffect: storeSettings.glowEffect,
+        screenShake: storeSettings.screenShake,
+        soundEnabled: storeSettings.soundEnabled,
+        musicEnabled: storeSettings.musicEnabled,
+        soundVolume: storeSettings.soundVolume,
+        musicVolume: storeSettings.musicVolume,
+      });
+    }
+  }, [isOpen]);
+
+  const handleOpen = () => {
+    setDraft({
+      backgroundTheme: storeSettings.backgroundTheme,
+      particleIntensity: storeSettings.particleIntensity,
+      trailEffect: storeSettings.trailEffect,
+      glowEffect: storeSettings.glowEffect,
+      screenShake: storeSettings.screenShake,
+      soundEnabled: storeSettings.soundEnabled,
+      musicEnabled: storeSettings.musicEnabled,
+      soundVolume: storeSettings.soundVolume,
+      musicVolume: storeSettings.musicVolume,
+    });
+    setIsOpen(true);
+  };
+
+  const handleConfirm = () => {
+    if (draft) {
+      storeSettings.applySettings(draft);
+    }
+    setDraft(null);
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(null);
+    setIsOpen(false);
+  };
+
+  const handleReset = () => {
+    setDraft({ ...defaultSettings });
+  };
+
+  const updateDraft = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => {
+    setDraft((prev) => prev ? { ...prev, [key]: value } : prev);
+  };
+
+  if (!draft) {
+    return (
+      <button
+        onClick={handleOpen}
+        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-game-panel/90 backdrop-blur-sm border border-game-magic/30 text-gray-300 hover:text-white hover:border-game-magic/50 transition-all duration-200 hover:scale-105"
+      >
+        <Settings className="w-5 h-5" />
+        <span className="hidden sm:inline">设置</span>
+      </button>
+    );
+  }
 
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-game-panel/90 backdrop-blur-sm border border-game-magic/30 text-gray-300 hover:text-white hover:border-game-magic/50 transition-all duration-200 hover:scale-105"
       >
         <Settings className="w-5 h-5" />
@@ -56,7 +115,7 @@ export default function SettingsPanel() {
                 游戏设置
               </h2>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleCancel}
                 className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -73,9 +132,9 @@ export default function SettingsPanel() {
                   {themeOptions.map((theme) => (
                     <button
                       key={theme.value}
-                      onClick={() => setBackgroundTheme(theme.value)}
+                      onClick={() => updateDraft('backgroundTheme', theme.value)}
                       className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                        backgroundTheme === theme.value
+                        draft.backgroundTheme === theme.value
                           ? 'border-game-magic bg-game-magic/20 scale-105'
                           : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
                       }`}
@@ -108,14 +167,14 @@ export default function SettingsPanel() {
                       <p className="text-xs text-gray-400">投射物飞行轨迹效果</p>
                     </div>
                     <button
-                      onClick={() => setTrailEffect(!trailEffect)}
+                      onClick={() => updateDraft('trailEffect', !draft.trailEffect)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
-                        trailEffect ? 'bg-green-500' : 'bg-gray-600'
+                        draft.trailEffect ? 'bg-green-500' : 'bg-gray-600'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          trailEffect ? 'translate-x-6' : 'translate-x-0.5'
+                          draft.trailEffect ? 'translate-x-6' : 'translate-x-0.5'
                         }`}
                       />
                     </button>
@@ -127,14 +186,14 @@ export default function SettingsPanel() {
                       <p className="text-xs text-gray-400">粒子和特效的光晕</p>
                     </div>
                     <button
-                      onClick={() => setGlowEffect(!glowEffect)}
+                      onClick={() => updateDraft('glowEffect', !draft.glowEffect)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
-                        glowEffect ? 'bg-green-500' : 'bg-gray-600'
+                        draft.glowEffect ? 'bg-green-500' : 'bg-gray-600'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          glowEffect ? 'translate-x-6' : 'translate-x-0.5'
+                          draft.glowEffect ? 'translate-x-6' : 'translate-x-0.5'
                         }`}
                       />
                     </button>
@@ -146,14 +205,14 @@ export default function SettingsPanel() {
                       <p className="text-xs text-gray-400">爆炸和击杀时的震动反馈</p>
                     </div>
                     <button
-                      onClick={() => setScreenShake(!screenShake)}
+                      onClick={() => updateDraft('screenShake', !draft.screenShake)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
-                        screenShake ? 'bg-green-500' : 'bg-gray-600'
+                        draft.screenShake ? 'bg-green-500' : 'bg-gray-600'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          screenShake ? 'translate-x-6' : 'translate-x-0.5'
+                          draft.screenShake ? 'translate-x-6' : 'translate-x-0.5'
                         }`}
                       />
                     </button>
@@ -166,7 +225,7 @@ export default function SettingsPanel() {
                         <p className="text-xs text-gray-400">特效粒子数量</p>
                       </div>
                       <span className="text-sm font-bold text-game-magic">
-                        {Math.round(particleIntensity * 100)}%
+                        {Math.round(draft.particleIntensity * 100)}%
                       </span>
                     </div>
                     <input
@@ -174,8 +233,8 @@ export default function SettingsPanel() {
                       min="0.2"
                       max="2"
                       step="0.1"
-                      value={particleIntensity}
-                      onChange={(e) => setParticleIntensity(parseFloat(e.target.value))}
+                      value={draft.particleIntensity}
+                      onChange={(e) => updateDraft('particleIntensity', parseFloat(e.target.value))}
                       className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-game-magic"
                     />
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -199,25 +258,25 @@ export default function SettingsPanel() {
                       <span className="text-sm font-medium text-white">音效</span>
                     </div>
                     <button
-                      onClick={() => setSoundEnabled(!soundEnabled)}
+                      onClick={() => updateDraft('soundEnabled', !draft.soundEnabled)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
-                        soundEnabled ? 'bg-green-500' : 'bg-gray-600'
+                        draft.soundEnabled ? 'bg-green-500' : 'bg-gray-600'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          soundEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                          draft.soundEnabled ? 'translate-x-6' : 'translate-x-0.5'
                         }`}
                       />
                     </button>
                   </div>
 
-                  {soundEnabled && (
+                  {draft.soundEnabled && (
                     <div className="p-3 bg-gray-800/50 rounded-xl">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs text-gray-400">音效音量</span>
                         <span className="text-xs font-bold text-gray-300">
-                          {Math.round(soundVolume * 100)}%
+                          {Math.round(draft.soundVolume * 100)}%
                         </span>
                       </div>
                       <input
@@ -225,8 +284,8 @@ export default function SettingsPanel() {
                         min="0"
                         max="1"
                         step="0.1"
-                        value={soundVolume}
-                        onChange={(e) => setSoundVolume(parseFloat(e.target.value))}
+                        value={draft.soundVolume}
+                        onChange={(e) => updateDraft('soundVolume', parseFloat(e.target.value))}
                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-game-magic"
                       />
                     </div>
@@ -238,25 +297,25 @@ export default function SettingsPanel() {
                       <span className="text-sm font-medium text-white">音乐</span>
                     </div>
                     <button
-                      onClick={() => setMusicEnabled(!musicEnabled)}
+                      onClick={() => updateDraft('musicEnabled', !draft.musicEnabled)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
-                        musicEnabled ? 'bg-green-500' : 'bg-gray-600'
+                        draft.musicEnabled ? 'bg-green-500' : 'bg-gray-600'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          musicEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                          draft.musicEnabled ? 'translate-x-6' : 'translate-x-0.5'
                         }`}
                       />
                     </button>
                   </div>
 
-                  {musicEnabled && (
+                  {draft.musicEnabled && (
                     <div className="p-3 bg-gray-800/50 rounded-xl">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs text-gray-400">音乐音量</span>
                         <span className="text-xs font-bold text-gray-300">
-                          {Math.round(musicVolume * 100)}%
+                          {Math.round(draft.musicVolume * 100)}%
                         </span>
                       </div>
                       <input
@@ -264,8 +323,8 @@ export default function SettingsPanel() {
                         min="0"
                         max="1"
                         step="0.1"
-                        value={musicVolume}
-                        onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
+                        value={draft.musicVolume}
+                        onChange={(e) => updateDraft('musicVolume', parseFloat(e.target.value))}
                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-game-magic"
                       />
                     </div>
@@ -275,7 +334,7 @@ export default function SettingsPanel() {
 
               <div className="pt-2">
                 <button
-                  onClick={resetToDefaults}
+                  onClick={handleReset}
                   className="w-full py-3 px-4 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -286,10 +345,10 @@ export default function SettingsPanel() {
 
             <div className="p-4 border-t border-game-magic/20">
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleConfirm}
                 className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-[1.02]"
               >
-                完成
+                保存设置
               </button>
             </div>
           </div>
