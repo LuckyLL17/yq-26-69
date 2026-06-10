@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings, X, Palette, Sparkles, Volume2, Music, RotateCcw } from 'lucide-react';
-import { useSettingsStore } from '@/game/settingsStore';
+import { useSettingsStore, type GameSettings } from '@/game/settingsStore';
+import { audioService } from '@/game/audioService';
 import type { BackgroundTheme } from '@/game/renderer';
 
 const themeOptions: { value: BackgroundTheme; label: string; icon: string; colors: string[] }[] = [
@@ -12,8 +14,72 @@ const themeOptions: { value: BackgroundTheme; label: string; icon: string; color
   { value: 'ocean', label: '深海秘境', icon: '🌊', colors: ['#0f2a3a', '#0ea5e9', '#7dd3fc'] },
 ];
 
+// 默认设置（与 settingsStore 保持一致），用于"恢复默认"按钮重置草稿
+const defaultDraft: GameSettings = {
+  backgroundTheme: 'night',
+  particleIntensity: 1,
+  trailEffect: true,
+  glowEffect: true,
+  screenShake: true,
+  soundEnabled: true,
+  musicEnabled: true,
+  soundVolume: 0.7,
+  musicVolume: 0.5,
+};
+
+/**
+ * 从 store 中提取一份纯设置数据，作为草稿初始值。
+ * 单一职责：剥离 setter，仅返回 GameSettings 字段。
+ */
+function pickSettingsSnapshot(store: ReturnType<typeof useSettingsStore.getState>): GameSettings {
+  return {
+    backgroundTheme: store.backgroundTheme,
+    particleIntensity: store.particleIntensity,
+    trailEffect: store.trailEffect,
+    glowEffect: store.glowEffect,
+    screenShake: store.screenShake,
+    soundEnabled: store.soundEnabled,
+    musicEnabled: store.musicEnabled,
+    soundVolume: store.soundVolume,
+    musicVolume: store.musicVolume,
+  };
+}
+
 export default function SettingsPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const applySettings = useSettingsStore((s) => s.applySettings);
+  // 草稿态：弹框内修改不直接落到 store，必须点"完成"才生效
+  const [draft, setDraft] = useState<GameSettings>(() => pickSettingsSnapshot(useSettingsStore.getState()));
+
+  // 每次打开弹框时，使用当前已保存的设置初始化草稿
+  useEffect(() => {
+    if (isOpen) {
+      setDraft(pickSettingsSnapshot(useSettingsStore.getState()));
+    }
+  }, [isOpen]);
+
+  // 草稿字段更新工具
+  const updateDraft = <K extends keyof GameSettings>(key: K, value: GameSettings[K]) => {
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // 关闭弹框：丢弃草稿，不保存任何修改
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  // 点击"完成"：保存草稿到 store（持久化 + 触发音频/渲染同步）
+  const handleConfirm = () => {
+    applySettings(draft);
+    audioService.play('click');
+    setIsOpen(false);
+  };
+
+  // 恢复默认：仅重置草稿，"完成"后才真正保存
+  const handleResetDraft = () => {
+    setDraft(defaultDraft);
+  };
+
   const {
     backgroundTheme,
     particleIntensity,
@@ -24,17 +90,7 @@ export default function SettingsPanel() {
     musicEnabled,
     soundVolume,
     musicVolume,
-    setBackgroundTheme,
-    setParticleIntensity,
-    setTrailEffect,
-    setGlowEffect,
-    setScreenShake,
-    setSoundEnabled,
-    setMusicEnabled,
-    setSoundVolume,
-    setMusicVolume,
-    resetToDefaults,
-  } = useSettingsStore();
+  } = draft;
 
   return (
     <>
@@ -46,8 +102,8 @@ export default function SettingsPanel() {
         <span className="hidden sm:inline">设置</span>
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      {isOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-game-panel/95 backdrop-blur-md rounded-2xl border border-game-magic/30 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-game-panel/95 backdrop-blur-md p-4 border-b border-game-magic/20 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -55,7 +111,7 @@ export default function SettingsPanel() {
                 游戏设置
               </h2>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -72,7 +128,7 @@ export default function SettingsPanel() {
                   {themeOptions.map((theme) => (
                     <button
                       key={theme.value}
-                      onClick={() => setBackgroundTheme(theme.value)}
+                      onClick={() => updateDraft('backgroundTheme', theme.value)}
                       className={`p-3 rounded-xl border-2 transition-all duration-200 ${
                         backgroundTheme === theme.value
                           ? 'border-game-magic bg-game-magic/20 scale-105'
@@ -107,7 +163,7 @@ export default function SettingsPanel() {
                       <p className="text-xs text-gray-400">投射物飞行轨迹效果</p>
                     </div>
                     <button
-                      onClick={() => setTrailEffect(!trailEffect)}
+                      onClick={() => updateDraft('trailEffect', !trailEffect)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
                         trailEffect ? 'bg-green-500' : 'bg-gray-600'
                       }`}
@@ -126,7 +182,7 @@ export default function SettingsPanel() {
                       <p className="text-xs text-gray-400">粒子和特效的光晕</p>
                     </div>
                     <button
-                      onClick={() => setGlowEffect(!glowEffect)}
+                      onClick={() => updateDraft('glowEffect', !glowEffect)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
                         glowEffect ? 'bg-green-500' : 'bg-gray-600'
                       }`}
@@ -145,7 +201,7 @@ export default function SettingsPanel() {
                       <p className="text-xs text-gray-400">爆炸和击杀时的震动反馈</p>
                     </div>
                     <button
-                      onClick={() => setScreenShake(!screenShake)}
+                      onClick={() => updateDraft('screenShake', !screenShake)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
                         screenShake ? 'bg-green-500' : 'bg-gray-600'
                       }`}
@@ -174,7 +230,7 @@ export default function SettingsPanel() {
                       max="2"
                       step="0.1"
                       value={particleIntensity}
-                      onChange={(e) => setParticleIntensity(parseFloat(e.target.value))}
+                      onChange={(e) => updateDraft('particleIntensity', parseFloat(e.target.value))}
                       className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-game-magic"
                     />
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -198,7 +254,7 @@ export default function SettingsPanel() {
                       <span className="text-sm font-medium text-white">音效</span>
                     </div>
                     <button
-                      onClick={() => setSoundEnabled(!soundEnabled)}
+                      onClick={() => updateDraft('soundEnabled', !soundEnabled)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
                         soundEnabled ? 'bg-green-500' : 'bg-gray-600'
                       }`}
@@ -225,7 +281,7 @@ export default function SettingsPanel() {
                         max="1"
                         step="0.1"
                         value={soundVolume}
-                        onChange={(e) => setSoundVolume(parseFloat(e.target.value))}
+                        onChange={(e) => updateDraft('soundVolume', parseFloat(e.target.value))}
                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-game-magic"
                       />
                     </div>
@@ -237,7 +293,7 @@ export default function SettingsPanel() {
                       <span className="text-sm font-medium text-white">音乐</span>
                     </div>
                     <button
-                      onClick={() => setMusicEnabled(!musicEnabled)}
+                      onClick={() => updateDraft('musicEnabled', !musicEnabled)}
                       className={`w-12 h-6 rounded-full transition-all duration-200 ${
                         musicEnabled ? 'bg-green-500' : 'bg-gray-600'
                       }`}
@@ -264,7 +320,7 @@ export default function SettingsPanel() {
                         max="1"
                         step="0.1"
                         value={musicVolume}
-                        onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
+                        onChange={(e) => updateDraft('musicVolume', parseFloat(e.target.value))}
                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-game-magic"
                       />
                     </div>
@@ -274,7 +330,7 @@ export default function SettingsPanel() {
 
               <div className="pt-2">
                 <button
-                  onClick={resetToDefaults}
+                  onClick={handleResetDraft}
                   className="w-full py-3 px-4 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -285,14 +341,15 @@ export default function SettingsPanel() {
 
             <div className="p-4 border-t border-game-magic/20">
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleConfirm}
                 className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-[1.02]"
               >
                 完成
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

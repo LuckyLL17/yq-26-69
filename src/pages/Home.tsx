@@ -74,19 +74,27 @@ export default function Home() {
             <StatusBar />
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="lg:w-64 flex-shrink-0 order-2 lg:order-1 space-y-4">
-              <TowerPanel />
-              {selectedTowerId && <TowerUpgradePanel />}
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+            <div className="lg:w-64 flex-shrink-0 order-2 lg:order-1 lg:relative">
+              {/* lg 下使用绝对定位填满列高，避免左侧栏自身内容撑高整行（保持游戏画面决定行高） */}
+              <div className="space-y-4 lg:absolute lg:inset-0 lg:overflow-y-auto">
+                <TowerPanel />
+                {selectedTowerId && <TowerUpgradePanel />}
+              </div>
             </div>
 
             <div className="flex-1 order-1 lg:order-2 flex justify-center">
               <GameCanvas />
             </div>
 
-            <div className="lg:w-64 flex-shrink-0 order-3 space-y-4">
-              <GameControls />
-              <BattleLog />
+            <div className="lg:w-64 flex-shrink-0 order-3 lg:relative">
+              {/* lg 下右栏使用绝对定位填满游戏画面高度；BattleLog 通过 flex-1 自适应剩余空间 */}
+              <div className="space-y-4 lg:absolute lg:inset-0 lg:flex lg:flex-col lg:gap-4 lg:space-y-0 lg:min-h-0">
+                <GameControls />
+                <div className="lg:flex-1 lg:min-h-0">
+                  <BattleLog />
+                </div>
+              </div>
             </div>
           </div>
 

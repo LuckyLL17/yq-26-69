@@ -41,6 +41,7 @@ import {
   getWaveConfig,
 } from './config';
 import { getDefaultLevel } from './levelEditor';
+import { audioService } from './audioService';
 
 let idCounter = 0;
 const generateId = () => `id_${++idCounter}`;
@@ -240,6 +241,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       status: 'playing',
       isCountdownActive: autoStartWave,
     });
+    // 进入游戏时启动背景音乐（若已开启），并播放点击音效
+    audioService.play('click');
+    audioService.startMusic();
     if (autoStartWave) {
       get().addBattleLog('info', '自动开始倒计时...');
     }
@@ -351,6 +355,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       effects: [...effects, newEffect],
     });
 
+    // 建造音效
+    audioService.play('build');
     get().addBattleLog('build', `建造了 ${config.name}（花费 ${levelConfig.cost} 金币）`);
   },
 
@@ -403,6 +409,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       effects: newEffects,
     });
 
+    // 升级音效
+    audioService.play('upgrade');
     get().addBattleLog('upgrade', `${config.name} 升级到 ${tower.level + 1} 级（花费 ${nextLevelConfig.cost} 金币）`);
   },
 
@@ -428,6 +436,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedTowerId: null,
     });
 
+    // 出售音效
+    audioService.play('sell');
     get().addBattleLog('sell', `出售了 ${config.name}（获得 ${sellValue} 金币）`);
   },
 
@@ -658,6 +668,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       timeWarpScale: newTimeWarpScale,
     });
 
+    // 卡牌音效：治疗类播放治疗音效，金币雨播放金币音效，其余统一卡牌音效
+    if (selectedCard.type === 'heal') {
+      audioService.play('heal');
+    } else if (selectedCard.type === 'gold_rain') {
+      audioService.play('gold');
+    } else {
+      audioService.play('card');
+    }
     get().addBattleLog('card', `使用了 ${selectedCard.name}`);
   },
 
@@ -781,6 +799,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     get().drawCards(2);
+    // 波次开始音效
+    audioService.play('wave_start');
     get().addBattleLog('wave', `第 ${wave + 1} 波敌人来袭！`);
   },
 
@@ -995,6 +1015,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       if (deadEnemies.length > 0) {
         const totalReward = deadEnemies.reduce((sum, e) => sum + e.reward, 0);
+        // 击杀音效（每帧最多触发一次，避免连击轰炸）
+        audioService.play('kill');
         get().addBattleLog('kill', `消灭了 ${deadEnemies.length} 个敌人（获得 ${totalReward} 金币）`);
       }
 
@@ -1169,9 +1191,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       if (newLives <= 0) {
         newStatus = 'lost';
+        // 失败音效，并停止背景音乐
+        audioService.play('lose');
+        audioService.stopMusic();
         get().addBattleLog('warning', '游戏失败！生命值耗尽...');
       } else if (waveComplete && wave >= maxWaves && gameMode === 'normal') {
         newStatus = 'won';
+        // 胜利音效，并停止背景音乐
+        audioService.play('win');
+        audioService.stopMusic();
         get().addBattleLog('info', '🎉 恭喜通关！所有波次已清除！');
       } else if (waveComplete) {
         get().addBattleLog('info', `第 ${wave} 波完成！`);
