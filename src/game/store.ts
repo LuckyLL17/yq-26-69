@@ -41,6 +41,7 @@ import {
   getWaveConfig,
 } from './config';
 import { getDefaultLevel } from './levelEditor';
+import { audioManager } from './audioManager';
 
 let idCounter = 0;
 const generateId = () => `id_${++idCounter}`;
@@ -240,6 +241,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       status: 'playing',
       isCountdownActive: autoStartWave,
     });
+    
+    // 启动背景音乐
+    audioManager.startMusic();
+    
     if (autoStartWave) {
       get().addBattleLog('info', '自动开始倒计时...');
     }
@@ -351,6 +356,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       effects: [...effects, newEffect],
     });
 
+    audioManager.playSound('build');
     get().addBattleLog('build', `建造了 ${config.name}（花费 ${levelConfig.cost} 金币）`);
   },
 
@@ -403,6 +409,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       effects: newEffects,
     });
 
+    audioManager.playSound('upgrade');
     get().addBattleLog('upgrade', `${config.name} 升级到 ${tower.level + 1} 级（花费 ${nextLevelConfig.cost} 金币）`);
   },
 
@@ -428,6 +435,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedTowerId: null,
     });
 
+    audioManager.playSound('sell');
+    audioManager.playSound('gold');
     get().addBattleLog('sell', `出售了 ${config.name}（获得 ${sellValue} 金币）`);
   },
 
@@ -658,6 +667,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       timeWarpScale: newTimeWarpScale,
     });
 
+    audioManager.playSound('card');
     get().addBattleLog('card', `使用了 ${selectedCard.name}`);
   },
 
@@ -780,6 +790,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       nextWaveConfig,
     });
 
+    audioManager.playSound('wave_start');
     get().drawCards(2);
     get().addBattleLog('wave', `第 ${wave + 1} 波敌人来袭！`);
   },
@@ -970,6 +981,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           get().addBattleLog('info', `护盾抵挡了 ${shieldDamage} 点伤害！`);
         }
         if (reachedEnd.length - shieldDamage > 0) {
+          audioManager.playSound('damage');
           get().addBattleLog('warning', `${reachedEnd.length - shieldDamage} 个敌人突破了防线！`);
         }
       }
@@ -995,6 +1007,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       if (deadEnemies.length > 0) {
         const totalReward = deadEnemies.reduce((sum, e) => sum + e.reward, 0);
+        audioManager.playSound('kill');
+        audioManager.playSound('gold');
         get().addBattleLog('kill', `消灭了 ${deadEnemies.length} 个敌人（获得 ${totalReward} 金币）`);
       }
 
@@ -1025,6 +1039,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           const angle = Math.atan2(enemyPos.y - towerPos.y, enemyPos.x - towerPos.x);
           tower.angle = angle;
           tower.lastAttackTime = newGameTime;
+
+          // 播放射击音效（为了避免音效过多，我们只在部分塔射击时播放）
+          if (Math.random() < 0.3) {
+            audioManager.playSound('shoot');
+          }
 
           let damage = levelConfig.damage * newTowerBoostMultiplier;
           let isCrit = false;
@@ -1169,11 +1188,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       if (newLives <= 0) {
         newStatus = 'lost';
+        audioManager.playSound('game_over');
+        audioManager.stopMusic();
         get().addBattleLog('warning', '游戏失败！生命值耗尽...');
       } else if (waveComplete && wave >= maxWaves && gameMode === 'normal') {
         newStatus = 'won';
+        audioManager.playSound('victory');
+        audioManager.stopMusic();
         get().addBattleLog('info', '🎉 恭喜通关！所有波次已清除！');
       } else if (waveComplete) {
+        audioManager.playSound('wave_complete');
         get().addBattleLog('info', `第 ${wave} 波完成！`);
         const rewardCards = get().generateWaveRewardCards();
         newStatus = 'wave_reward';
