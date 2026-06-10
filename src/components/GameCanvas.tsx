@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '@/game/store';
 import { useSettingsStore } from '@/game/settingsStore';
 import { GameRenderer } from '@/game/renderer';
+import { audioManager } from '@/game/audioManager';
 import { TILE_SIZE, MAP_WIDTH, MAP_HEIGHT } from '@/game/config';
 import type { Position } from '@/game/types';
 
@@ -40,6 +41,10 @@ export default function GameCanvas({ onCardTargetSelect }: GameCanvasProps) {
     trailEffect,
     glowEffect,
     screenShake,
+    soundEnabled,
+    musicEnabled,
+    soundVolume,
+    musicVolume,
   } = useSettingsStore();
 
   useEffect(() => {
@@ -78,6 +83,10 @@ export default function GameCanvas({ onCardTargetSelect }: GameCanvasProps) {
       screenShake,
     });
   }, [backgroundTheme, particleIntensity, trailEffect, glowEffect, screenShake]);
+
+  useEffect(() => {
+    audioManager.updateVolumes();
+  }, [soundEnabled, musicEnabled, soundVolume, musicVolume]);
 
   const gameLoop = useCallback((timestamp: number) => {
     const renderer = rendererRef.current;
@@ -143,6 +152,7 @@ export default function GameCanvas({ onCardTargetSelect }: GameCanvasProps) {
   };
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    audioManager.playSound('click');
     const canvas = canvasRef.current;
     if (!canvas) return;
 

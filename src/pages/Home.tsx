@@ -75,7 +75,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="lg:w-64 flex-shrink-0 order-2 lg:order-1 space-y-4">
+            <div className="lg:w-64 flex-shrink-0 order-2 lg:order-1 flex flex-col gap-4">
               <TowerPanel />
               {selectedTowerId && <TowerUpgradePanel />}
             </div>
@@ -87,7 +87,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="lg:w-64 flex-shrink-0 order-3 space-y-4">
+            <div className="lg:w-64 flex-shrink-0 order-3 flex flex-col gap-4">
               <GameControls />
               <BattleLog />
             </div>
