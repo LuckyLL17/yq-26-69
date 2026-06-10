@@ -80,18 +80,17 @@ export default function Home() {
               {selectedTowerId && <TowerUpgradePanel />}
             </div>
 
-            <div className="flex-1 order-1 lg:order-2 flex justify-center">
+            <div className="flex-1 order-1 lg:order-2 flex flex-col items-center">
               <GameCanvas />
+              <div className="w-full">
+                <CardHand />
+              </div>
             </div>
 
             <div className="lg:w-64 flex-shrink-0 order-3 space-y-4">
               <GameControls />
               <BattleLog />
             </div>
-          </div>
-
-          <div className="mt-4">
-            <CardHand />
           </div>
 
           <div className="text-center mt-4 text-gray-600 text-sm">

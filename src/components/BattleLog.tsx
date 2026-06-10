@@ -28,7 +28,7 @@ export default function BattleLog() {
   const [autoScroll, setAutoScroll] = useState(true);
 
   return (
-    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl p-4 border border-game-magic/30 shadow-lg h-full flex flex-col">
+    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl p-4 border border-game-magic/30 shadow-lg flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <ScrollText className="w-5 h-5 text-purple-400" />
@@ -58,7 +58,7 @@ export default function BattleLog() {
         className={`flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-0 ${
           autoScroll ? 'scroll-smooth' : ''
         }`}
-        style={{ maxHeight: '280px' }}
+        style={{ maxHeight: '180px' }}
       >
         {battleLogs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 py-8">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings, X, Palette, Sparkles, Volume2, Music, RotateCcw } from 'lucide-react';
 import { useSettingsStore } from '@/game/settingsStore';
 import type { BackgroundTheme } from '@/game/renderer';
@@ -46,8 +47,8 @@ export default function SettingsPanel() {
         <span className="hidden sm:inline">设置</span>
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      {isOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-game-panel/95 backdrop-blur-md rounded-2xl border border-game-magic/30 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-game-panel/95 backdrop-blur-md p-4 border-b border-game-magic/20 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -293,7 +294,7 @@ export default function SettingsPanel() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </>
   );
 }
