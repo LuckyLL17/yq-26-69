@@ -180,13 +180,13 @@ export default function GameCanvas({ onCardTargetSelect }: GameCanvasProps) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-full">
       <canvas
         ref={canvasRef}
         width={canvasWidth}
         height={canvasHeight}
-        className="rounded-lg border-2 border-game-magic/30 shadow-2xl cursor-crosshair"
-        style={{ maxWidth: '100%', height: 'auto' }}
+        className="rounded-lg border-2 border-game-magic/30 shadow-2xl cursor-crosshair block w-full h-auto"
+        style={{ aspectRatio: `${canvasWidth}/${canvasHeight}` }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
