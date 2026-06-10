@@ -159,4 +159,134 @@ class AudioManager {
   public playBuild(): void {
     this.initializeAudio();
     this.playTone(440, 0.1, 'sine', 0.3);
-    setTimeout(() => this.playTone(554.37, 0.1,
+    setTimeout(() => this.playTone(554.37, 0.1, 'sine', 0.3), 50);
+    setTimeout(() => this.playTone(659.25, 0.15, 'sine', 0.3), 100);
+  }
+
+  // 升级塔音效
+  public playUpgrade(): void {
+    this.initializeAudio();
+    this.playTone(523.25, 0.1, 'sine', 0.3);
+    setTimeout(() => this.playTone(659.25, 0.1, 'sine', 0.3), 80);
+    setTimeout(() => this.playTone(783.99, 0.2, 'sine', 0.3), 160);
+  }
+
+  // 射击音效
+  public playShoot(): void {
+    this.initializeAudio();
+    this.playTone(880, 0.05, 'square', 0.1);
+  }
+
+  // 爆炸音效
+  public playExplosion(): void {
+    this.initializeAudio();
+    if (!this.isInitialized || !this.audioContext || !this.soundGain) return;
+    
+    const bufferSize = this.audioContext.sampleRate * 0.2;
+    const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+    }
+
+    const noiseSource = this.audioContext.createBufferSource();
+    noiseSource.buffer = buffer;
+    
+    const filter = this.audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1000;
+
+    const gainNode = this.audioContext.createGain();
+    gainNode.gain.value = 0.4;
+
+    noiseSource.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.soundGain);
+
+    noiseSource.start();
+  }
+
+  // 击杀音效
+  public playKill(): void {
+    this.initializeAudio();
+    this.playTone(300, 0.1, 'sawtooth', 0.2);
+    setTimeout(() => this.playTone(200, 0.15, 'sawtooth', 0.2), 50);
+  }
+
+  // 获得金币音效
+  public playCoin(): void {
+    this.initializeAudio();
+    this.playTone(987.77, 0.08, 'sine', 0.2);
+    setTimeout(() => this.playTone(1318.51, 0.1, 'sine', 0.2), 60);
+  }
+
+  // 受伤害音效
+  public playDamage(): void {
+    this.initializeAudio();
+    this.playTone(150, 0.2, 'sawtooth', 0.25);
+  }
+
+  // 卡牌抽牌音效
+  public playCardDraw(): void {
+    this.initializeAudio();
+    this.playTone(600, 0.08, 'triangle', 0.2);
+    setTimeout(() => this.playTone(800, 0.08, 'triangle', 0.2), 40);
+  }
+
+  // 卡牌使用音效
+  public playCardUse(): void {
+    this.initializeAudio();
+    this.playTone(523.25, 0.1, 'sine', 0.25);
+    setTimeout(() => this.playTone(783.99, 0.15, 'sine', 0.25), 80);
+  }
+
+  // 波次开始音效
+  public playWaveStart(): void {
+    this.initializeAudio();
+    this.playTone(392, 0.15, 'sine', 0.3);
+    setTimeout(() => this.playTone(523.25, 0.15, 'sine', 0.3), 100);
+    setTimeout(() => this.playTone(659.25, 0.2, 'sine', 0.3), 200);
+  }
+
+  // 胜利音效
+  public playVictory(): void {
+    this.initializeAudio();
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, i) => {
+      setTimeout(() => this.playTone(freq, 0.2, 'sine', 0.3), i * 120);
+    });
+  }
+
+  // 失败音效
+  public playDefeat(): void {
+    this.initializeAudio();
+    const notes = [392, 349.23, 311.13, 261.63];
+    notes.forEach((freq, i) => {
+      setTimeout(() => this.playTone(freq, 0.3, 'sawtooth', 0.25), i * 150);
+    });
+  }
+
+  // 按钮点击音效
+  public playClick(): void {
+    this.initializeAudio();
+    this.playTone(800, 0.05, 'sine', 0.15);
+  }
+
+  // 销毁
+  public destroy(): void {
+    if (this.settingsUnsubscribe) {
+      this.settingsUnsubscribe();
+      this.settingsUnsubscribe = null;
+    }
+    this.stopMusic();
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+    this.isInitialized = false;
+  }
+}
+
+// 单例导出
+export const audioManager = new AudioManager();
