@@ -12,9 +12,9 @@ export default function CardHand() {
   };
 
   return (
-    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl p-4 border border-game-magic/30 shadow-lg">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+    <div className="bg-game-panel/90 backdrop-blur-sm rounded-xl px-4 pt-2 pb-3 border border-game-magic/30 shadow-lg">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">
           <span>🃏</span> 卡牌
         </h3>
         <div className="flex gap-3 text-xs text-gray-400">
@@ -23,7 +23,7 @@ export default function CardHand() {
         </div>
       </div>
 
-      <div className="flex justify-center gap-2 min-h-[140px] items-end">
+      <div className="flex justify-center gap-2 min-h-[120px] items-end">
         {hand.map((card, index) => {
           const canUse = canUseCard(card);
           const isSelected = selectedCard?.id === card.id;
@@ -92,12 +92,12 @@ export default function CardHand() {
       </div>
 
       {selectedCard && (
-        <div className="mt-4 p-3 bg-game-panel-light/50 rounded-lg border border-game-magic/30">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">{selectedCard.icon}</span>
-            <span className="font-bold text-white">{selectedCard.name}</span>
+        <div className="mt-3 p-2 bg-game-panel-light/50 rounded-lg border border-game-magic/30">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xl">{selectedCard.icon}</span>
+            <span className="font-bold text-white text-sm">{selectedCard.name}</span>
             <span
-              className="text-xs font-bold px-2 py-0.5 rounded"
+              className="text-[10px] font-bold px-2 py-0.5 rounded"
               style={{
                 backgroundColor: RARITY_COLORS[selectedCard.rarity] + '30',
                 color: RARITY_COLORS[selectedCard.rarity],
@@ -105,13 +105,13 @@ export default function CardHand() {
             >
               {RARITY_NAMES[selectedCard.rarity]}
             </span>
-            <span className="text-blue-400 text-sm ml-auto">消耗 {selectedCard.manaCost} 法力</span>
+            <span className="text-blue-400 text-xs ml-auto">消耗 {selectedCard.manaCost} 法力</span>
           </div>
-          <p className="text-sm text-gray-300">{selectedCard.description}</p>
+          <p className="text-xs text-gray-300">{selectedCard.description}</p>
           {isTargetedCard(selectedCard.type) ? (
-            <p className="text-xs text-game-gold mt-2">💡 点击地图选择目标位置</p>
+            <p className="text-[10px] text-game-gold mt-1">💡 点击地图选择目标位置</p>
           ) : (
-            <p className="text-xs text-game-green mt-2">💡 再次点击卡牌使用</p>
+            <p className="text-[10px] text-game-green mt-1">💡 再次点击卡牌使用</p>
           )}
         </div>
       )}
