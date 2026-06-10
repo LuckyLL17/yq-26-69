@@ -25,6 +25,7 @@ interface SettingsStore extends GameSettings {
   setSoundVolume: (volume: number) => void;
   setMusicVolume: (volume: number) => void;
   resetToDefaults: () => void;
+  applySettings: (settings: Partial<GameSettings>) => void;
 }
 
 const defaultSettings: GameSettings = {
@@ -54,6 +55,7 @@ export const useSettingsStore = create<SettingsStore>()(
       setSoundVolume: (volume) => set({ soundVolume: volume }),
       setMusicVolume: (volume) => set({ musicVolume: volume }),
       resetToDefaults: () => set(defaultSettings),
+      applySettings: (settings) => set(settings),
     }),
     {
       name: 'game-settings',

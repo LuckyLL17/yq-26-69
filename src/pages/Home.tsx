@@ -75,23 +75,22 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="lg:w-64 flex-shrink-0 order-2 lg:order-1 space-y-4">
+            <div className="lg:w-64 flex-shrink-0 order-2 lg:order-1 flex flex-col gap-4">
               <TowerPanel />
               {selectedTowerId && <TowerUpgradePanel />}
             </div>
 
-            <div className="flex-1 order-1 lg:order-2 flex justify-center">
+            <div className="flex-1 order-1 lg:order-2 flex flex-col items-center">
               <GameCanvas />
+              <div className="w-full">
+                <CardHand />
+              </div>
             </div>
 
-            <div className="lg:w-64 flex-shrink-0 order-3 space-y-4">
+            <div className="lg:w-64 flex-shrink-0 order-3 flex flex-col gap-4">
               <GameControls />
               <BattleLog />
             </div>
-          </div>
-
-          <div className="mt-4">
-            <CardHand />
           </div>
 
           <div className="text-center mt-4 text-gray-600 text-sm">
